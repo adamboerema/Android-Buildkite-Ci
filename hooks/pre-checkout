@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "--- STARTED $BUILDKITE_COMMAND ---"
+
+echo "--- STARTED COPYING SSH KEY ---"
+echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
+#Permissions settings
+chmod 700 ~/.ssh/id_rsa
+chmod 700 ~/.ssh/id_rsa.pub
+echo -e "Host *\n\tStrictHostKeyChecking no" > ~/.ssh/config
+echo "--- COMPLETED COPYING SSH KEY ---"
+
+echo "--- STARTED ADDING SSH KEY ---"
+
+eval $(ssh-agent -s)
+expect << EOF
+  spawn ssh-add
+  expect "assphrase"
+  send "$SSH_PRIVATE_KEY_PASSWORD\r"
+  expect eof
+EOF
+
+echo "--- COMPLETED ADDING SSH KEY ---"
